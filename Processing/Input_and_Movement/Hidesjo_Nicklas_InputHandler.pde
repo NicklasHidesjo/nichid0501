@@ -1,4 +1,4 @@
-public boolean moveRight,moveLeft,moveUp,moveDown;
+public boolean moveRight,moveLeft,moveUp,moveDown,gravity;
 
 
 void keyPressed()
@@ -19,7 +19,12 @@ void keyPressed()
 	{
 		moveDown = true;
 	}
+	if(key == 'g')
+	{
+		gravity = !gravity;
+	}
 }
+
 void keyReleased()
 {
 	if(keyCode == RIGHT || key == 'd')
