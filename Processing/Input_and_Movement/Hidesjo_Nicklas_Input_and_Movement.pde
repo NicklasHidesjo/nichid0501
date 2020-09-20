@@ -1,5 +1,5 @@
 long currentTime;
-float deltaTime;
+float deltaTime; 
 float time;
 
 float xMov = 0;
