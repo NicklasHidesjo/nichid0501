@@ -29,7 +29,7 @@ void draw()
 
 	CalculateXMov();
 	CalculateYMov();
-	calculateGravity();
+	CalculateGravity();
 
 	MoveBall();
 	WrapandConstrainBall();
@@ -100,7 +100,7 @@ void CalculateYMov()
 	}
 }
 
-void calculateGravity()
+void CalculateGravity()
 {
 	if(gravity)
 	{
