@@ -1,6 +1,6 @@
 public boolean moveRight,moveLeft,moveUp,moveDown,gravity;
 
-
+ 
 void keyPressed()
 {
 	if(keyCode == RIGHT || key == 'd')

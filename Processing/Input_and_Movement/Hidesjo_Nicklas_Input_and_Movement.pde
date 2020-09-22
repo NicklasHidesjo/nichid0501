@@ -1,5 +1,5 @@
 long currentTime;
-float deltaTime;
+float deltaTime; 
 float time;
 
 float xMov = 0;
@@ -29,7 +29,7 @@ void draw()
 
 	CalculateXMov();
 	CalculateYMov();
-	calculateGravity();
+	CalculateGravity();
 
 	MoveBall();
 	WrapandConstrainBall();
@@ -100,7 +100,7 @@ void CalculateYMov()
 	}
 }
 
-void calculateGravity()
+void CalculateGravity()
 {
 	if(gravity)
 	{
