@@ -24,4 +24,13 @@ void keyPressed()
 	{
 		pause = !pause;
 	}
+
+	if(key == 'r')
+	{
+		restart();
+	}
+	if(key == 'c')
+	{
+		clearScreen();
+	}
 }
