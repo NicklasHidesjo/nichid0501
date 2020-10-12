@@ -8,7 +8,7 @@ in game controls
 "+" = slow down the simulation (increase the tick time)  
 "-" = speed up the simulation (decrease the tick time)  
 
-while paused klicking on a square will let ju change it from dead to alive or alive to dead  
+while paused klicking on a square will let ju change its dead or alive state 
 | --- |  
 
 ![](Nicklas_Hidesjo_Game_Of_Life.gif)
