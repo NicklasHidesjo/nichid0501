@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
         "/n 3 = Velocity movement")]
     [SerializeField] MovementTypes movementType = MovementTypes.translateMovement;
     [SerializeField] float speed = 100f;
-    
+    [SerializeField] int playerID = 0;
     
     Rigidbody2D rb2d;
     AnimationController animController;
@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         MoveCharacter();
         SetAnimation();
@@ -63,29 +63,22 @@ public class PlayerController : MonoBehaviour
     void TranslateMovement()
     {
         movement = new Vector2(horizontalMovement, verticalMovement);
-
         if (movement.SqrMagnitude() > 1)
         {
             movement.Normalize();
         }
 
-        movement = (movement * speed) * Time.deltaTime;
-
-        transform.Translate(movement * Time.deltaTime);
+        movement = (movement * speed) * Time.fixedDeltaTime;
+        transform.Translate(movement);
     }
     void ForceMovement()
     {
-        horizontalMovement = Input.GetAxis("Horizontal");
-        verticalMovement = Input.GetAxis("Vertical");
-
         movement = new Vector2(horizontalMovement, verticalMovement);
-
-        rb2d.AddForce((movement * speed) * Time.deltaTime);
+        rb2d.AddForce(movement * speed);
     }
     void VelocityMovement()
     {
-        movement = new Vector2(horizontalMovement, verticalMovement) * speed * Time.deltaTime;
-
+        movement = new Vector2(horizontalMovement, verticalMovement) * speed;
         rb2d.velocity = movement;
     }
 
@@ -113,5 +106,21 @@ public class PlayerController : MonoBehaviour
         {
             animController.setAnimation("Idle");
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.GetComponent<Tile>())
+            collision.GetComponent<Tile>().AddToPlayerList(this);
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.GetComponent<Tile>())
+            collision.GetComponent<Tile>().RemoveFromPlayerList(this);
+    }
+
+    public int GetID()
+    {
+        return playerID;
     }
 }
