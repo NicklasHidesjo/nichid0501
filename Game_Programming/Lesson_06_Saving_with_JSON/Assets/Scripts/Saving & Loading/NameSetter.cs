@@ -13,7 +13,7 @@ public class NameSetter : MonoBehaviour
     void Start()
     {
         saveManager = FindObjectOfType<SaveManager>();
-        saveManager.LoadData(previousNames.Length);
+        //saveManager.LoadData(previousNames.Length);
     }
 
     public void SaveNames()

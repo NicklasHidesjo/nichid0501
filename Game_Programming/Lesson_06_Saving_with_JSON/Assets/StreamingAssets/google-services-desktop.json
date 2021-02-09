@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "785913836867",
+    "firebase_url": "https://carhideandseek-3915b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "carhideandseek-3915b",
+    "storage_bucket": "carhideandseek-3915b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785913836867:android:f49e15e55e0ffb5e516bf6",
+        "android_client_info": {
+          "package_name": "com.Yrgo.SaveData.Nicklas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "785913836867-dm0vjf0thvuml08cp9ran20geqf19tb0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhSq2Fy5sCQ6FzC7ERj3Zv528Pz3mAn6U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "785913836867-dm0vjf0thvuml08cp9ran20geqf19tb0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

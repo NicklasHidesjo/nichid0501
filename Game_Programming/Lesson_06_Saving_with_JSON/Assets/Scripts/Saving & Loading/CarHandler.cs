@@ -23,7 +23,7 @@ public class CarHandler : MonoBehaviour
 
     private void Start()
     {
-        saveManager.LoadData();
+        //saveManager.LoadData();
     }
 
     private void GetReferences()

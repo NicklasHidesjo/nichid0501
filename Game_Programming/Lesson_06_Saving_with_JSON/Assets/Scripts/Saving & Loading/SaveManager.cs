@@ -7,6 +7,11 @@ using TMPro;
 using System.IO;
 using System.Text;
 using System.Net;
+using Firebase;
+using Firebase.Extensions;
+using Firebase.Database;
+using Firebase.Auth;
+
 
 [Serializable]
 public class MultiplePlayers
@@ -43,8 +48,9 @@ public class SaveManager : MonoBehaviour
         //turn class into json 
         string jsonString = JsonUtility.ToJson(multiplePlayers);
 
-        SaveToFile("CarGameSaveFile", jsonString);      
-        SaveOnline("CarGameSaveFile", jsonString);
+        SaveToFile("CarGameSaveFile", jsonString);
+        //SaveOnline("CarGameSaveFile", jsonString);
+        SaveToFirebase(jsonString);
     }
     public void SaveData(string[] names, int players)
     {
@@ -63,10 +69,11 @@ public class SaveManager : MonoBehaviour
         string jsonString = JsonUtility.ToJson(multiplePlayers);
 
         SaveToFile("CarGameSaveFile", jsonString);
-        SaveOnline("CarGameSaveFile", jsonString);
+        //SaveOnline("CarGameSaveFile", jsonString);
+        SaveToFirebase(jsonString);
     }
 
-    public void LoadData()
+    public void LoadData(string data)
     {
 
         //load from file
@@ -74,14 +81,14 @@ public class SaveManager : MonoBehaviour
 
         //load from server
       
-        string jsonString2 = LoadOnline("CarGameSaveFile");
+        /*string data = LoadOnline("CarGameSaveFile");*/
 
-        if (jsonString != jsonString2)
+        if (jsonString != data)
         {
             Debug.LogError("Not the same!!!!");
         }
 
-        var multiplePlayers = JsonUtility.FromJson<MultiplePlayers>(jsonString2);
+        var multiplePlayers = JsonUtility.FromJson<MultiplePlayers>(data);
         var carHandler = FindObjectOfType<CarHandler>();
         var players = FindObjectsOfType<Mover>();
 
@@ -124,7 +131,22 @@ public class SaveManager : MonoBehaviour
             nameTagManager.SetNameField(i, multiplePlayers.players[i].Name);
         }
     }
+    public void LoadFromFireBase()
+    {
+        var db = FirebaseDatabase.DefaultInstance;
+        var userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        var dataTask = db.RootReference.Child("users").Child(userId).GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.Exception != null)
+            {
+                Debug.LogError(task.Exception);
+            }
 
+            DataSnapshot snap = task.Result;
+
+            LoadData(snap.GetRawJsonValue());
+        });
+    }
 
     public void SaveToFile(string fileName, string jsonString)
     {
@@ -165,6 +187,18 @@ public class SaveManager : MonoBehaviour
         }
     }
 
+    public void SaveToFirebase(string data)
+    {
+        var db = FirebaseDatabase.DefaultInstance;
+        var userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        db.RootReference.Child("users").Child(userId).SetRawJsonValueAsync(data);
+        /*        yield return new WaitUntil(() => dataTask.IsCompleted);
+
+                if (dataTask.Exception != null)
+                    Debug.LogWarning(dataTask.Exception);
+                else
+                    Debug.Log("DataTestWrite: Complete");*/
+    }
 
     public string Load(string fileName)
     {
