@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "987223274806",
+    "firebase_url": "https://fir-dartgame-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "fir-dartgame",
+    "storage_bucket": "fir-dartgame.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:987223274806:android:2f0d3d95ac81b326c1af97",
+        "android_client_info": {
+          "package_name": "com.Hidesjo.DartGame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "987223274806-c84k7f3nsanoteql8s440qo6g9vnrsl4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcQm-UxRDxDxpaTvPReAqdZCp0f3GOw70"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "987223274806-c84k7f3nsanoteql8s440qo6g9vnrsl4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
