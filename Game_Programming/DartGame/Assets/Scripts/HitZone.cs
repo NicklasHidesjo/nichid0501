@@ -6,6 +6,7 @@ public class HitZone : MonoBehaviour
 {
 	[SerializeField] int score;
 	[SerializeField] bool doubleScore;
+	public bool DoubleScore => doubleScore;
 	[SerializeField] bool tripleScore;
 
 	public int Score 

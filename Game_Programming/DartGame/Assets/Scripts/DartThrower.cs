@@ -7,44 +7,123 @@ using UnityEngine.UI;
 public class DartThrower : MonoBehaviour
 {
 	[SerializeField] GameObject Dart;
-	[SerializeField] Slider force;
-	[SerializeField] Text forceText;
-
-	[SerializeField] Slider yAngle;
-	[SerializeField] Slider xAngle;
-	[SerializeField] Text xAngleText;
-	[SerializeField] Text yAngleText;
-
 	[SerializeField] Transform parent;
+	[SerializeField] List<GameObject> darts;
+
+	[SerializeField] Slider forceGauge;
+
+	[Tooltip("The minimum and maximum force allow to throw with")]
+	[SerializeField] float minForce = 2f, maxForce = 10f;
+
+	[Tooltip("The amount that force increases by (per second)")]
+	[SerializeField] float forceIncrease = 1f;
+
+	float force = 2;
+
+	bool increaseForce = false;
+	public bool IncreaseForce { get { return increaseForce; } set { increaseForce = value; } }
+
+	CrossHair aim;
+
+	Game game;
+
 
 	public void Start()
 	{
-		UpdateLaunchRotation();
-		UpdateText();
+		aim = FindObjectOfType<CrossHair>();
+		game = FindObjectOfType<Game>();
+		forceGauge.maxValue = maxForce;
+		forceGauge.minValue = minForce;
 	}
 
 	public void ThrowDart()
 	{
 		GameObject newDart = Instantiate(Dart,parent);
 		newDart.transform.position = transform.position;
-		Vector3 velocity = transform.forward * force.value;
+		Vector3 velocity = transform.forward * force;
 		newDart.GetComponent<Rigidbody>().velocity = velocity;
+		darts.Add(newDart);
 	}
 
-	public void UpdateText()
-	{
-		float x = (float)Math.Round(xAngle.value, 2);
-		float y = (float)Math.Round(yAngle.value, 2);
-		float speed = (float)Math.Round(force.value, 2);
 
-		xAngleText.text = "Angle X: " + x;
-		yAngleText.text = "Angle Y: " + y;
-		forceText.text = "Force: " + speed;
+	private void Update()
+	{
+		transform.LookAt(aim.transform);
+
+		HandleInput();
+		if (!increaseForce) { return; }
+		UpdateForce();
 	}
 
-	public void UpdateLaunchRotation()
+	private void HandleInput()
 	{
-		Quaternion target = Quaternion.Euler(-xAngle.value, yAngle.value, 0);
-		transform.rotation = target;
+		if (game.GamePaused)
+		{
+			return;
+		}
+		Debug.Log("throw dart");
+		if (!game.canThrow)
+		{
+			return;
+		}
+		if(Application.platform == RuntimePlatform.Android)
+		{
+			for (int i = 0; i < Input.touchCount; i++)
+			{
+				if (Input.GetTouch(i).phase == TouchPhase.Began)
+				{
+					if (increaseForce) { return; }
+					force = 2;
+					forceIncrease = Mathf.Abs(forceIncrease);
+					increaseForce = true;
+				}
+				if (Input.GetTouch(i).phase == TouchPhase.Ended)
+				{
+					if (!increaseForce)
+					{
+						return;
+					}
+					increaseForce = false;
+					ThrowDart();
+				}
+			}
+		}
+		else
+		{
+			if (Input.GetMouseButtonDown(0))
+			{
+				force = 2;
+				forceIncrease = Mathf.Abs(forceIncrease);
+				increaseForce = true;
+			}
+			if (Input.GetMouseButtonUp(0))
+			{
+				if (!increaseForce)
+				{
+					return;
+				}
+				increaseForce = false;
+				ThrowDart();
+			}
+		}
+	}
+
+	private void UpdateForce()
+	{
+		force += forceIncrease * Time.deltaTime;
+		if (force > maxForce || force < minForce)
+		{
+			forceIncrease *= -1;
+		}
+		forceGauge.value = force;
+	}
+
+	public void RemoveDarts()
+	{
+		foreach (var dart in darts)
+		{
+			Destroy(dart);
+		}
+		darts.Clear();
 	}
 }

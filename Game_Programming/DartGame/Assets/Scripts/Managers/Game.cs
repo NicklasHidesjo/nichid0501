@@ -14,38 +14,31 @@ public class Game : MonoBehaviour
 	public int startingScore;
 	public int maxPlayers;
 
-	[SerializeField] bool aimedDouble = false;
-	[SerializeField] bool aimedTripple = false;
-	[SerializeField] GameObject playerView = null;
-
 	[Header("Buttons")]
-	[SerializeField] Button throwButton = null;
-	[SerializeField] Button endTurn = null;
+	[SerializeField] Button endTurn;
 
-	[Header("Aim Texts")]
-	[SerializeField] Text aim = null;
-	[SerializeField] Text aimedFor = null;
-	[SerializeField] Text lastHit = null;
+	[Header("Game objects")]
+	[SerializeField] GameObject options;
+	[SerializeField] GameObject playerView;
 
 	[Header("Player Texts")]
-	[SerializeField] Text playerName = null;
-	[SerializeField] Text totalScore = null;
-	[SerializeField] Text currentThrow = null;
-	[SerializeField] Text roundTotal = null;
-	[SerializeField] Text status = null;
-
-
-	public bool AimedDouble { get { return aimedDouble; } set { aimedTripple = false; aimedDouble = !aimedDouble; UpdateAimedText(); } }
-	public bool AimedTripple { get { return aimedTripple; } set { aimedDouble = false; aimedTripple = !aimedTripple; UpdateAimedText(); } }
+	[SerializeField] Text playerName;
+	[SerializeField] Text totalScore;
+	[SerializeField] Text roundTotal;
+	[SerializeField] GameObject gameCompleted;
+	[SerializeField] Text status;
 
 	public int Rounds { get; private set; }
 	public bool DartDouble { get; set; }
-
-	DartBoard dartBoard;
+	public bool canThrow { get; private set; }
+	public bool GamePaused { get; private set; }
 
 	UserInfo user;
 
 	GameInfo game;
+
+	DartThrower thrower;
+	HitShower hitDisplayer;
 
 	public void StartGame(GameInfo game, UserInfo user)
 	{
@@ -57,7 +50,8 @@ public class Game : MonoBehaviour
 
 		startingScore = game.startingScore;
 
-		dartBoard = new DartBoard(this);
+		thrower = FindObjectOfType<DartThrower>();
+		hitDisplayer = FindObjectOfType<HitShower>();
 
 		game.throws = new List<int>();
 
@@ -72,7 +66,6 @@ public class Game : MonoBehaviour
 		}
 
 		UpdateButtons();
-		UpdateAimedText();
 	}
 
 	private void UpdateGame(object sender, ValueChangedEventArgs args)
@@ -86,9 +79,6 @@ public class Game : MonoBehaviour
 		string jsonData = args.Snapshot.GetRawJsonValue();
 		game = JsonUtility.FromJson<GameInfo>(jsonData);
 
-		aimedDouble = false;
-		aimedTripple = false;
-
 		if(game == null)
 		{
 			return;
@@ -101,44 +91,20 @@ public class Game : MonoBehaviour
 		}
 
 		UpdateText();
-		UpdateAimedText();
 		UpdateButtons();
 		StartCoroutine(HandleEndOfGame());
 	}
 
 	private void UpdateText()
 	{
-		int throwNumber = Mathf.Clamp(game.throws.Count + 1, 1, 3);
 		UserInfo info = game.players[game.currentPlayer];
 		playerName.text = "Player throwing: " + info.name;
 		totalScore.text = "Total Score: " + info.score.ToString();
-		currentThrow.text = "Current Throw: " + throwNumber.ToString();
 		roundTotal.text = "Round Total: " + GetRoundScore().ToString();
-	}
-
-	private void UpdateAimedText()
-	{
-		string text = "Aiming for: ";
-
-		if (aimedDouble)
-		{
-			text += "Double " + aim.text;
-		}
-		else if (aimedTripple)
-		{
-			text += "Triple " + aim.text;
-		}
-		else
-		{
-			text += aim.text;
-		}
-
-		aimedFor.text = text;
 	}
 
 	private void UpdateButtons()
 	{
-		throwButton.interactable = false;
 		endTurn.interactable = false;
 
 		if (game.status != "full") { return; }
@@ -146,7 +112,7 @@ public class Game : MonoBehaviour
 
 		endTurn.interactable = true;
 		if (game.throws.Count >= 3) { return; }
-		throwButton.interactable = true;
+		canThrow = true;
 	}
 
 	private IEnumerator HandleEndOfGame()
@@ -158,7 +124,7 @@ public class Game : MonoBehaviour
 			game.status = "Completed";
 			user.activeGame = "";
 
-			status.gameObject.SetActive(true);
+			gameCompleted.SetActive(true);
 			FirebaseDatabase.DefaultInstance.GetReference("games/" + game.gameID).ValueChanged -= UpdateGame;
 			yield return SaveGame();
 		}
@@ -193,53 +159,22 @@ public class Game : MonoBehaviour
 		}
 	}
 
-	public void ThrowDart()
+	public void ThrowDart(int hit, bool doubleHit)
 	{
-		int aimed = 0;
-		string attemptedAim = aim.text;
-		try
-		{
-			aimed = int.Parse(attemptedAim);
-		}
-		catch (FormatException e)
-		{
-			Debug.LogWarning(e);
-			aimed = -1;
-		}
-
-		if (!ValidThrow(aimed)) { return; }
-
-		int hit = dartBoard.ThrowDart(aimed, aimedDouble, aimedTripple);
+		DartDouble = doubleHit;
 		game.throws.Add(hit);
 
-		Debug.Log("Aimed for: " + aimed + " Hit: " + hit);
-		lastHit.text = "Last hit: " + hit.ToString();
 		if (game.throws.Count >= 3)
 		{
-			throwButton.interactable = false;
+			canThrow = false;
 		}
 
 		StartCoroutine(SaveGame());
 	}
-
-	private static bool ValidThrow(int aimed)
-	{
-		bool valid = false;
-
-		if (aimed <= 20 && aimed > 0)
-		{
-			valid = true;
-		}
-		if (aimed == 50 || aimed == 25)
-		{
-			valid = true;
-		}
-		Debug.Log(valid);
-		return valid;
-	}
-
 	public void EndTurn()
 	{
+		thrower.RemoveDarts();
+		hitDisplayer.RemoveTexts();
 		UpdateUser();
 		NextPlayer();
 	}
@@ -320,7 +255,7 @@ public class Game : MonoBehaviour
 		playerView.SetActive(false);
 		user.activeGame = "";
 		yield return StartCoroutine(SaveGame());
-		if(game.winners.Count > 0)
+		if (game.winners != null && game.winners.Count > 0)
 		{
 			if (game.winners.Count > 1)
 			{
@@ -343,6 +278,13 @@ public class Game : MonoBehaviour
 	{
 		FirebaseDatabase.DefaultInstance.GetReference("games/" + game.gameID).ValueChanged -= UpdateGame;
 		FindObjectOfType<SceneLoader>().LoadScene(1);
+	}
+
+	public void ToggleOptions()
+	{
+		thrower.IncreaseForce = false;
+		options.SetActive(!options.activeSelf);
+		GamePaused = options.activeSelf;
 	}
 
 	public void OnDestroy()
