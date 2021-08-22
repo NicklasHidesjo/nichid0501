@@ -62,7 +62,7 @@ public class DartThrower : MonoBehaviour
 			return;
 		}
 		Debug.Log("throw dart");
-		if (!game.canThrow)
+		if (!game.CanThrow)
 		{
 			return;
 		}
@@ -125,5 +125,10 @@ public class DartThrower : MonoBehaviour
 			Destroy(dart);
 		}
 		darts.Clear();
+	}
+
+	public List<GameObject> GetDarts()
+	{
+		return darts;
 	}
 }

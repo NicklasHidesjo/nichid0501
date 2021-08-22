@@ -22,16 +22,22 @@ public class Game : MonoBehaviour
 	[SerializeField] GameObject playerView;
 
 	[Header("Player Texts")]
-	[SerializeField] Text playerName;
-	[SerializeField] Text totalScore;
-	[SerializeField] Text roundTotal;
+	[SerializeField] Text player1Name;
+	[SerializeField] Text player1Score;
+	[SerializeField] Text player2Name;
+	[SerializeField] Text player2Score;
 	[SerializeField] GameObject gameCompleted;
 	[SerializeField] Text status;
+	[SerializeField] GameObject bustWindow;
 
 	public int Rounds { get; private set; }
 	public bool DartDouble { get; set; }
-	public bool canThrow { get; private set; }
+	public bool CanThrow { get; private set; }
 	public bool GamePaused { get; private set; }
+
+	[SerializeField] GameObject[] DisplayDarts;
+
+	bool busted;
 
 	UserInfo user;
 
@@ -89,18 +95,41 @@ public class Game : MonoBehaviour
 			StartCoroutine(RemoveGame());
 			return;
 		}
-
+		UpdateDarts();
 		UpdateText();
 		UpdateButtons();
 		StartCoroutine(HandleEndOfGame());
 	}
 
+	private void UpdateDarts()
+	{
+		foreach (var dart in DisplayDarts)
+		{
+			dart.transform.position = new Vector3(1, 0, 0);
+		}
+
+		if (user.playerIndex == game.currentPlayer) { return; }
+
+		int index = 0;
+
+		foreach (var position in game.dartPositions)
+		{
+			DisplayDarts[index].transform.position = position;
+			index++;
+		}
+	}
+
 	private void UpdateText()
 	{
-		UserInfo info = game.players[game.currentPlayer];
-		playerName.text = "Player throwing: " + info.name;
-		totalScore.text = "Total Score: " + info.score.ToString();
-		roundTotal.text = "Round Total: " + GetRoundScore().ToString();
+		if(game.status != "full"){ return; }
+
+		UserInfo player1 = game.players[0];
+		player1Name.text = "Player: " + player1.name;
+		player1Score.text = "Score: " + player1.score.ToString();
+
+		UserInfo player2 = game.players[1];
+		player2Name.text = "Player: " + player2.name;
+		player2Score.text = "Score: " + player2.score.ToString();
 	}
 
 	private void UpdateButtons()
@@ -109,10 +138,13 @@ public class Game : MonoBehaviour
 
 		if (game.status != "full") { return; }
 		if (user.playerIndex != game.currentPlayer) { return; }
-
 		endTurn.interactable = true;
 		if (game.throws.Count >= 3) { return; }
-		canThrow = true;
+		if (game.throws.Count == 0)
+		{
+			user.previousScore = user.score;
+		}
+		CanThrow = true;
 	}
 
 	private IEnumerator HandleEndOfGame()
@@ -159,66 +191,74 @@ public class Game : MonoBehaviour
 		}
 	}
 
-	public void ThrowDart(int hit, bool doubleHit)
+	public void ThrowDart(int hit, bool doubleHit, Vector3 position)
 	{
 		DartDouble = doubleHit;
 		game.throws.Add(hit);
+		user.score = DecreaseScore(hit);
+
+		game.dartPositions.Add(position);
+
+		if(busted)
+		{
+			CanThrow = false;
+			bustWindow.SetActive(true);
+			return;
+		}
 
 		if (game.throws.Count >= 3)
 		{
-			canThrow = false;
+			CanThrow = false;
 		}
 
+		game.players[game.currentPlayer].score = user.score;
 		StartCoroutine(SaveGame());
 	}
 	public void EndTurn()
 	{
 		thrower.RemoveDarts();
 		hitDisplayer.RemoveTexts();
+		game.dartPositions.Clear();
+
+		if(busted)
+		{
+			bustWindow.SetActive(false);
+			user.score = user.previousScore;
+			busted = false;
+		}
+
 		UpdateUser();
 		NextPlayer();
 	}
 
 	private void UpdateUser()
 	{
-		user.score -= DecreaseScore();
 		if(user.score == 0)
 		{
 			user.hasWon = true;
 		}
 	}
 
-	public int DecreaseScore()
+	public int DecreaseScore(int hit)
 	{
-		int newScore = user.score - GetRoundScore();
+		int newScore = user.score - hit;
 
 		if (newScore < 0)
 		{
-			return 0;
+			busted = true;
 		}
 
 		if (newScore == 1)
 		{
-			return 0;
+			busted = true;
 		}
 
 		if (newScore == 0 && !DartDouble)
 		{
-			return 0;
+			busted = true;
 		}
 
-		return GetRoundScore();
-	}
-	private int GetRoundScore()
-	{
-		int roundScore = 0;
-
-		foreach (var hit in game.throws)
-		{
-			roundScore += hit;
-		}
-
-		return Mathf.Abs(roundScore);
+		return newScore;
 	}
 
 	private IEnumerator SaveGame()
@@ -270,6 +310,7 @@ public class Game : MonoBehaviour
 		{
 			status.text = "A player has left the game, the game is now over";
 		}
+		gameCompleted.SetActive(true);
 		status.gameObject.SetActive(true);
 		yield return StartCoroutine(FirebaseManager.Instance.RemoveCompletedGames());
 	}

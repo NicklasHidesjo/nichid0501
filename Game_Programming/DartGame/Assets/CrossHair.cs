@@ -7,31 +7,41 @@ public class CrossHair : MonoBehaviour
 {
     [SerializeField] float speed = 5f;
     [SerializeField] Text gyroSpeed;
+    Quaternion inverseFlat;
+
+    Quaternion tilt;
 
     DartThrower thrower;
-	private void Start()
+    Game game;
+    
+    private void Start()
 	{
+        game = FindObjectOfType<Game>();
         thrower = FindObjectOfType<DartThrower>();
         Input.gyro.enabled = true;
+        inverseFlat = Quaternion.Inverse(Input.gyro.attitude);
 	}
 
 	void FixedUpdate()
     {
-        // do not forget to have a check if one can throw a dart here. 
-
+        if (!game.CanThrow) { return; }
         if (thrower.IncreaseForce) { return; }
 
         if (Application.platform == RuntimePlatform.Android)
-        {
-            float xChange = Input.acceleration.x * speed * Time.deltaTime;
-            float yChange = Input.acceleration.y * speed * Time.deltaTime;
+		{
+			tilt = Input.gyro.attitude * inverseFlat;
 
-            float xPos = Mathf.Clamp(transform.position.x + xChange, -0.44f, 0.44f);
-            float yPos = Mathf.Clamp(transform.position.y + yChange, 0f, 1f);
+			gyroSpeed.text = "X: " + tilt.x + " | Y: " + tilt.y + " | Z: " + tilt.z;
 
-            transform.position = new Vector3(xPos, yPos, 1.9f);
-        }
-        else
+			float xChange = tilt.x * speed * Time.fixedDeltaTime;
+			float yChange = tilt.y * speed * Time.fixedDeltaTime;
+
+			float xPos = Mathf.Clamp(transform.position.x + xChange, -0.44f, 0.44f);
+			float yPos = Mathf.Clamp(transform.position.y + yChange, 0f, 1f);
+
+			transform.position = new Vector3(xPos, yPos, 1.9f);
+		}
+		else
         {
             Vector3 mousePos = Input.mousePosition;
             mousePos = Camera.main.ScreenToWorldPoint(mousePos);

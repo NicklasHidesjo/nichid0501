@@ -9,19 +9,10 @@ public class UserInfo
 	public string name;
 	public string ID;
 	public int score;
+	public int previousScore;
 	public string activeGame;
 	public bool hasWon; // remove this once we are done with the UserForGame stuff
 	public int playerIndex;
-}
-
-// this will be what we send into GameInfo
-[Serializable]
-public class UserForGame
-{
-	public string name;
-	public int playerIndex;
-	public int score;
-	public bool hasWon;
 }
 
 [Serializable]
@@ -38,4 +29,5 @@ public class GameInfo
 	public List<UserInfo> players;
 	public List<UserInfo> winners;
 	public List<int> throws;
+	public List<Vector3> dartPositions;
 }

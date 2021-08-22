@@ -5,13 +5,8 @@ using UnityEngine.UI;
 
 public class Dart : MonoBehaviour
 {
-
-/*	[SerializeField] Text hitText;*/
-
 	bool collided = false;
 	Rigidbody body;
-
-
 
 	private void Start()
 	{
@@ -29,7 +24,6 @@ public class Dart : MonoBehaviour
 			Vector3 vel = body.velocity;
 			body.velocity = Vector3.zero;
 			body.AddForce(vel, ForceMode.Impulse);
-			//hitText.text = "Frame Hit!";
 			GetComponent<BoxCollider>().enabled = false;
 			GetComponent<CapsuleCollider>().enabled = false;
 
@@ -46,6 +40,6 @@ public class Dart : MonoBehaviour
 			FindObjectOfType<HitShower>().ShowHit(HitInfo, transform.position);
 		}
 
-		FindObjectOfType<Game>().ThrowDart(hit, doubleHit);
+		FindObjectOfType<Game>().ThrowDart(hit, doubleHit, transform.position);
 	}
 }
